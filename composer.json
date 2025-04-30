@@ -12,6 +12,7 @@
         "stripe/stripe-php": "^17.1"
     },
     "require-dev": {
+        "deployer/deployer": "^7.5",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",

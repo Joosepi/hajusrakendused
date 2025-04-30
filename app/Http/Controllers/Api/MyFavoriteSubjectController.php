@@ -6,23 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Models\MyFavoriteSubject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class MyFavoriteSubjectController extends Controller
 {
     public function index(Request $request)
     {
-        $subjects = MyFavoriteSubject::with('user')->latest()->get();
+        $limit = $request->query('limit', 10);
+        $cacheKey = 'favorite_subjects_' . $limit;
         
-        // If the request wants JSON, return JSON response
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json([
-                'success' => true,
-                'data' => $subjects
-            ]);
-        }
+        $subjects = Cache::remember($cacheKey, 3600, function () use ($limit) {
+            return MyFavoriteSubject::with('user')
+                ->latest()
+                ->take($limit)
+                ->get();
+        });
         
-        // Otherwise return the view
-        return view('subjects.index', compact('subjects'));
+        return response()->json([
+            'success' => true,
+            'data' => $subjects,
+            'meta' => [
+                'total' => MyFavoriteSubject::count(),
+                'limit' => $limit
+            ]
+        ]);
+    }
+
+    public function show($id)
+    {
+        $cacheKey = 'favorite_subject_' . $id;
+        
+        $subject = Cache::remember($cacheKey, 3600, function () use ($id) {
+            return MyFavoriteSubject::with('user')->findOrFail($id);
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subject
+        ]);
     }
 
     public function store(Request $request)
@@ -44,12 +65,81 @@ class MyFavoriteSubjectController extends Controller
         
         $subject = MyFavoriteSubject::create($validated);
 
-        // Clear cache when new item is added
-        Cache::forget('favorite_subjects');
+        // Clear relevant caches
+        Cache::forget('favorite_subjects_*');
         
         return response()->json([
             'success' => true,
             'data' => $subject
         ], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $subject = MyFavoriteSubject::findOrFail($id);
+        
+        // Check authorization
+        if (auth()->id() !== $subject->user_id && !auth()->user()->is_admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'genre' => 'sometimes|string|max:255',
+            'release_year' => 'sometimes|integer|min:1900|max:' . (date('Y') + 1),
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($subject->image) {
+                Storage::disk('public')->delete($subject->image);
+            }
+            $validated['image'] = $request->file('image')->store('subjects', 'public');
+        }
+
+        $subject->update($validated);
+
+        // Clear relevant caches
+        Cache::forget('favorite_subjects_*');
+        Cache::forget('favorite_subject_' . $id);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subject
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $subject = MyFavoriteSubject::findOrFail($id);
+        
+        // Check authorization
+        if (auth()->id() !== $subject->user_id && !auth()->user()->is_admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        // Delete image if exists
+        if ($subject->image) {
+            Storage::disk('public')->delete($subject->image);
+        }
+
+        $subject->delete();
+
+        // Clear relevant caches
+        Cache::forget('favorite_subjects_*');
+        Cache::forget('favorite_subject_' . $id);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Subject deleted successfully'
+        ]);
     }
 }

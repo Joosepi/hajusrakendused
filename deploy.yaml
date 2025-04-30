@@ -1,0 +1,32 @@
+import: 
+  - recipe/laravel.php
+
+config:
+  repository: 'git@github.com:Joosepi/hajusrakendused.git'
+  keep_releases: 2
+
+hosts:
+  stage:
+    hostname: 'tak22reiljan.itmajakas.ee'
+    http_user: virt118440
+    remote_user: virt118440
+    deploy_path: '~/domeenid/www.tak22reiljan.itmajakas.ee/hajusrakendus1'
+
+tasks:
+
+  opcache:clear:
+    - run: killall php84-cgi || true
+
+  deploy:
+    - 'deploy:prepare'
+    - 'deploy:vendors'
+    - 'artisan:storage:link'
+   # - 'artisan:optimize:clear'
+   # - 'artisan:optimize'
+    - 'deploy:publish'
+
+after:
+  deploy:failed: deploy:unlock
+
+before:
+  deploy:success: opcache:clear

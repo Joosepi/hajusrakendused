@@ -1,0 +1,43 @@
+<?php
+
+namespace Deployer;
+
+require 'recipe/laravel.php';
+
+// Set the PHP binary path
+set('bin/php', '/usr/bin/php82-cli');
+
+// Project name
+set('application', 'hajusrakendused');
+
+// Project repository
+set('repository', 'git@github.com:Joosepi/hajusrakendused.git');
+
+// [Optional] Allocate tty for git clone. Default value is false.
+set('git_tty', true);
+
+// Shared files/dirs between deploys
+add('shared_files', []);
+add('shared_dirs', []);
+
+// Writable dirs by web server
+add('writable_dirs', []);
+
+// Hosts
+host('tak22reiljan.itmajakas.ee')
+    ->set('remote_user', 'virt118440')
+    ->set('deploy_path', '~/domeenid/www.tak22reiljan.itmajakas.ee/hajusrakendus1');
+
+// Set http_user if needed for writable dirs
+set('http_user', 'virt118440');
+
+// Tasks
+task('build', function () {
+    run('cd {{release_path}} && build');
+});
+
+// [Optional] if deploy fails automatically unlock.
+after('deploy:failed', 'deploy:unlock');
+
+// Migrate database before symlink new release.
+before('deploy:symlink', 'artisan:migrate');

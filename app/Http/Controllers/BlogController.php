@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -16,31 +17,53 @@ class BlogController extends Controller
         // $this->middleware('auth')->except(['index', 'show']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with(['user', 'comments'])->latest()->paginate(10);
-        return view('blog.index', compact('posts'));
+        $query = Post::with(['user', 'comments', 'categories']);
+
+        // Search functionality
+        if ($request->has('search')) {
+            $query->search($request->search);
+        }
+
+        // Category filter
+        if ($request->has('category')) {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        $posts = $query->latest()->paginate(10);
+        $categories = Category::all();
+
+        return view('blog.index', compact('posts', 'categories'));
     }
 
     public function create()
     {
-        return view('blog.create');
+        $categories = Category::all();
+        return view('blog.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|max:255',
-            'content' => 'required'
+            'content' => 'required',
+            'categories' => 'array|exists:categories,id'
         ]);
 
-        $data = [
+        $post = auth()->user()->posts()->create([
             'title' => $validated['title'],
             'description' => $validated['content']
-        ];
+        ]);
 
-        $post = auth()->user()->posts()->create($data);
-        return redirect()->route('blog.show', $post)->with('success', 'Post created successfully!');
+        if (isset($validated['categories'])) {
+            $post->categories()->attach($validated['categories']);
+        }
+
+        return redirect()->route('blog.show', $post)
+            ->with('success', 'Post created successfully!');
     }
 
     public function show(Post $post)

@@ -6,32 +6,49 @@
 <div class="container py-4">
     <div class="blog-post card bg-dark">
         <div class="card-body">
-            <h1 class="text-light mb-4">{{ $post->title }}</h1>
-            <div class="text-secondary mb-3">
-                Posted on {{ $post->created_at->format('F d, Y') }}
+            <!-- Categories display -->
+            <div class="mb-3">
+                @foreach($post->categories as $category)
+                    <span class="badge bg-primary me-2">
+                        {{ $category->name }}
+                    </span>
+                @endforeach
             </div>
-            <div class="blog-content text-light">
-                {!! $post->content !!}
+
+            <h1 class="text-light mb-3">{{ $post->title }}</h1>
+            
+            <div class="text-secondary mb-4">
+                <span class="me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ $post->user->name }}
+                </span>
+                <span>
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ $post->created_at->format('F d, Y') }}
+                </span>
+            </div>
+
+            <div class="blog-content text-light mb-4">
+                {!! nl2br(e($post->description)) !!}
             </div>
             
-            <div class="mt-4">
-                @auth
-                    @if(auth()->user()->isAdmin() || auth()->id() === $post->user_id)
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('blog.edit', $post) }}" class="btn btn-primary">
-                                <i class="fas fa-edit me-1"></i> Edit
-                            </a>
-                            <form action="{{ route('blog.destroy', $post) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">
-                                    <i class="fas fa-trash me-1"></i> Delete
-                                </button>
-                            </form>
-                        </div>
-                    @endif
-                @endauth
-            </div>
+            <!-- Edit/Delete buttons -->
+            @auth
+                @if(auth()->user()->isAdmin() || auth()->id() === $post->user_id)
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('blog.edit', $post) }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </a>
+                        <form action="{{ route('blog.destroy', $post) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">
+                                <i class="fas fa-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            @endauth
         </div>
     </div>
 
@@ -117,6 +134,15 @@
 
 .comment:hover {
     transform: translateY(-2px);
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 0.4em 0.8em;
+}
+
+.blog-content {
+    line-height: 1.8;
 }
 </style>
 @endsection 
