@@ -21,8 +21,8 @@ tasks:
     - 'deploy:prepare'
     - 'deploy:vendors'
     - 'artisan:storage:link'
-   # - 'artisan:optimize:clear'
-   # - 'artisan:optimize'
+    - 'artisan:optimize:clear'
+    - 'artisan:optimize'
     - 'deploy:publish'
 
 after:
