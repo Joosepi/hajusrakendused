@@ -26,4 +26,12 @@ php_value post_max_size 64M
 php_value max_execution_time 300
 php_value max_input_time 300
 
+# Allow access to the build directory
+RewriteCond %{REQUEST_URI} ^/build/
+RewriteRule ^ - [L]
+
+# Allow direct access to build assets
+RewriteCond %{REQUEST_URI} ^/build/
+RewriteRule ^ - [L]
+
 
