@@ -6,6 +6,8 @@
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <h1 class="text-white display-4 fw-bold">Favorite Subjects</h1>
+        <br>
+        <p><a href="https://tak22reiljan.itmajakas.ee/subjects">https://tak22reiljan.itmajakas.ee/subjects</a></p>
         <a href="{{ route('subjects.create') }}" class="btn btn-dark btn-lg rounded-pill border-light">
             <i class="fas fa-plus-circle me-2"></i> Add New Subject
         </a>
