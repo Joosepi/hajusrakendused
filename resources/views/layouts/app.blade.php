@@ -846,6 +846,11 @@
                                 <i class="fas fa-book"></i> Subjects
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('api-view') }}">
+                                <i class="fas fa-book"></i> API Fetch
+                            </a>
+                        </li>
                     </ul>
                     
                     <ul class="navbar-nav ms-auto d-flex align-items-center">

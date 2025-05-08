@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MarkerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ApiViewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -100,5 +101,7 @@ Route::get('/api/test', function() {
         'message' => 'API is working'
     ]);
 });
+
+Route::get('/api-view', [ApiViewController::class, 'index'])->name('api-view');
 
 require __DIR__.'/auth.php';
